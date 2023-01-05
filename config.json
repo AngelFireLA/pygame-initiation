@@ -1,0 +1,8 @@
+{
+  "vies": 3,
+  "signification" : "nombre de vies pour le mode de jeux Survivre",
+
+  "chrono": 5,
+  "signification" : "Nombre de secondes données pour le mode de jeux Temps Limité"
+
+}
