@@ -75,11 +75,11 @@ class Button:
                     fenetre.blit(self.pressed_image, (self.rect.x, self.rect.y + 5))
                     place_text(self.rect.center[0], self.rect.center[1] + 5, self.texte, self.taille_texte, (0, 0, 0))
                     pygame.display.update()
-                    pygame.time.delay(100)
+                    pygame.time.delay(10)
                     fenetre.blit(self.image, (self.rect.x, self.rect.y))
                     place_text(self.rect.center[0], self.rect.center[1], self.texte, self.taille_texte, (0, 0, 0))
                     pygame.display.update()
-                    pygame.time.delay(100)
+                    pygame.time.delay(10)
                 action = True
 
         if pygame.mouse.get_pressed()[0] == 0:
@@ -102,6 +102,31 @@ class Button:
         return True
 
 
+game_state = {}
+
+
+class GameState:
+    def __init__(self, name, screen, background=None):
+        self.name = name
+        if background:
+            self.background = background
+        self.screen = screen
+        game_state[name] = False
+
+    def draw(self):
+        pass
+
+    def enable(self):
+        global game_state
+        game_state = {key: False if key != self.name else True for key in game_state}
+
+    def is_enabled(self):
+        if game_state[self.name]:
+            return True
+        else:
+            return False
+
+
 score = 0
 high_score = 0
 clicks = 0
@@ -115,7 +140,11 @@ chronometre = 0
 secondes = 0
 
 # Variable pour l'état du jeux
-game_state = {"main_menu": True, "playing": False, "pause": False, "perdu": False, "instructions": False}
+gs_main_menu = GameState("main_menu", fenetre)
+gs_playing = GameState("playing", fenetre)
+gs_pause = GameState("pause", fenetre)
+gs_perdu = GameState("perdu", fenetre)
+gs_instruction = GameState("instruction", fenetre)
 gamemode = {"normal": True, "invisible": False, "chrono": False, "survie": False}
 vies = 3
 chrono = 5
@@ -172,7 +201,7 @@ def reset_position():
 
 
 def restart():
-    global score, fail_streak, delai, secondes, game_state, high_score, clicks, cible_touchee
+    global score, fail_streak, delai, secondes,  high_score, clicks, cible_touchee
     score = 0
     high_score = 0
     clicks = 0
@@ -190,7 +219,7 @@ def player_attacked(temps):
     fenetre.blit(perso_rouge, (position_perso.x, position_perso.y))
     show_mouse()
     pygame.display.flip()
-    while not time.time() - temps > 0.08 :
+    while not time.time() - temps > 0.1:
         pass
     fenetre.blit(perso, (position_perso.x, position_perso.y))
     show_mouse()
@@ -198,13 +227,13 @@ def player_attacked(temps):
 
 
 def event_manager():
-    global score, delai, topchrono, game_state, high_score, perso, cible_touchee, clicks, vies
+    global score, delai, topchrono,  high_score, perso, cible_touchee, clicks, vies
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             pygame.display.quit()
             sys.exit()
         if event.type == MOUSEBUTTONDOWN and event.button == 1:
-            if game_state["playing"]:
+            if gs_playing.is_enabled():
                 clicks += 1
                 if position_perso.collidepoint(pygame.mouse.get_pos()):
                     score += 1
@@ -226,14 +255,13 @@ def event_manager():
                     if gamemode["survie"]:
                         vies -= 1
                         if vies == 0:
-                            game_state = {key: False if key != "perdu" else True for key in game_state}
-
+                            gs_perdu.enable()
         if event.type == pygame.KEYDOWN:
-            if game_state["playing"]:
+            if gs_playing.is_enabled():
                 if event.key == pygame.K_ESCAPE:
-                    game_state = {key: False if key != 'pause' else True for key in game_state}
+                    gs_pause.enable()
                 if event.key == pygame.K_q:
-                    game_state = {key: False if key != 'perdu' else True for key in game_state}
+                    gs_perdu.enable()
 
 
 def reset_chrono():
@@ -255,11 +283,11 @@ def show_mouse():
         souris_rect.center = pygame.mouse.get_pos()
         fenetre.blit(souris, souris_rect)
 
-
+gs_main_menu.enable()
 while True:
     event_manager()
     fenetre.blit(background, (0, 0))
-    if game_state["playing"]:
+    if gs_playing.is_enabled():
         pygame.mouse.set_visible(False)
         place_text(530, 40, "Score : " + str(score), 36)
 
@@ -290,14 +318,14 @@ while True:
             if time.time() - chronometre > 1:
                 chrono -= 1
                 if chrono == 0:
-                    game_state = {key: False if key != 'perdu' else True for key in game_state}
+                    gs_perdu.enable()
                 chronometre = time.time()
         if gamemode["survie"]:
             fenetre.blit(heart, heart_pos)
             place_text(WIDTH - 30, HEIGHT - 40, str(vies), 60)
         fenetre.blit(perso, position_perso)
         show_mouse()
-    elif game_state["pause"]:
+    elif gs_pause.is_enabled():
         pygame.mouse.set_visible(True)
         place_text(WIDTH / 2, HEIGHT / 2.2, "Pause", 50)
         loop = True
@@ -308,21 +336,21 @@ while True:
                     sys.exit()
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_ESCAPE:
-                        game_state = {key: False if key != 'playing' else True for key in game_state}
+                        gs_playing.enable()
                         pygame.mouse.set_visible(False)
                         loop = False
                         reset_position()
                         topchrono = time.time()
             if menu_button.draw():
                 restart()
-                game_state = {key: False if key != 'main_menu' else True for key in game_state}
+                gs_main_menu.enable()
                 loop = False
             if restart_button.draw():
                 restart()
-                game_state = {key: False if key != 'playing' else True for key in game_state}
+                gs_playing.enable()
                 loop = False
             pygame.display.flip()
-    elif game_state["perdu"]:
+    elif gs_perdu.is_enabled():
         if clicks == 0:
             clicks = 1
         place_text(WIDTH / 2, 50, "Terminer !", 50)
@@ -336,44 +364,44 @@ while True:
             place_text(WIDTH / 2, 400 - 87.5, f"Highscore : {cible_touchee} cibles", 36)
         if menu_button.draw():
             restart()
-            game_state = {key: False if key != 'main_menu' else True for key in game_state}
+            gs_main_menu.enable()
         if restart_button.draw():
             restart()
-            game_state = {key: False if key != 'playing' else True for key in game_state}
-    elif game_state["main_menu"]:
+            gs_playing.enable()
+    elif gs_main_menu.is_enabled():
         place_text(WIDTH / 2, 30, "Choisir le mode de jeux :", 36)
         if normal_button.draw():
             restart()
-            game_state = {key: False if key != 'playing' else True for key in game_state}
+            gs_playing.enable()
             gamemode = {key: False if key != 'normal' else True for key in gamemode}
             play_sound("game-start.mp3", 0.7)
         if invisible_button.draw():
             restart()
-            game_state = {key: False if key != 'playing' else True for key in game_state}
+            gs_playing.enable()
             gamemode = {key: False if key != 'invisible' else True for key in gamemode}
             play_sound("game-start.mp3", 0.7)
         if chrono_button.draw():
             restart()
-            game_state = {key: False if key != 'playing' else True for key in game_state}
+            gs_playing.enable()
             gamemode = {key: False if key != 'chrono' else True for key in gamemode}
             play_sound("game-start.mp3", 0.7)
             reset_chrono()
         if survie_button.draw():
             restart()
-            game_state = {key: False if key != 'playing' else True for key in game_state}
+            gs_playing.enable()
             gamemode = {key: False if key != 'survie' else True for key in gamemode}
             play_sound("game-start.mp3", 0.7)
             reset_lives()
         if instructions_button.draw():
-            game_state = {key: False if key != 'instructions' else True for key in game_state}
-    elif game_state["instructions"]:
+            gs_instruction.enable()
+    elif gs_instruction.is_enabled():
         place_text(WIDTH / 2, 30, "Instructions :", 50)
         place_text(WIDTH / 2, 150, "Echap : Pauser ou résumer une partie", 33)
         place_text(200, 230, "Q : Terminer une partie", 33)
         place_text(330, 310, "config.js : Changer certains paramètres.", 30)
         if menu_button.draw():
             restart()
-            game_state = {key: False if key != 'main_menu' else True for key in game_state}
-    if not game_state["playing"]:
+            gs_main_menu.enable()
+    if not gs_playing.is_enabled():
         pygame.mouse.set_visible(True)
     pygame.display.flip()
