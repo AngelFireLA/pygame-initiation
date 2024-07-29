@@ -186,14 +186,15 @@ def get_difficulty() -> tuple:
 
 
 def show_difficulty():
-    if score < 25:
-        fenetre.blit(easy, (20, 20))
-    elif score < 50:
-        fenetre.blit(normal, (20, 20))
-    elif score < 100:
-        fenetre.blit(hard, (20, 20))
-    else:
-        fenetre.blit(impossible, (20, 20))
+    # if score < 25:
+    #     fenetre.blit(easy, (20, 20))
+    # elif score < 50:
+    #     fenetre.blit(normal, (20, 20))
+    # elif score < 100:
+    #     fenetre.blit(hard, (20, 20))
+    # else:
+    #     fenetre.blit(impossible, (20, 20))
+    pass
 
 
 def reset_position():
@@ -215,15 +216,16 @@ def restart():
 
 
 def player_attacked(temps):
-    global perso
-    fenetre.blit(perso_rouge, (position_perso.x, position_perso.y))
-    show_mouse()
-    pygame.display.flip()
-    while not time.time() - temps > 0.1:
-        pass
-    fenetre.blit(perso, (position_perso.x, position_perso.y))
-    show_mouse()
-    pygame.display.flip()
+    # global perso
+    # fenetre.blit(perso_rouge, (position_perso.x, position_perso.y))
+    # show_mouse()
+    # pygame.display.flip()
+    # while not time.time() - temps > 0.1:
+    #     pass
+    # fenetre.blit(perso, (position_perso.x, position_perso.y))
+    # show_mouse()
+    # pygame.display.flip()
+    pass
 
 
 def event_manager():
@@ -240,8 +242,8 @@ def event_manager():
                     cible_touchee += 1
                     if score > high_score:
                         high_score = score
-                    play_sound("slash.wav", 0.2)
-                    player_attacked(time.time())
+                    #play_sound("slash.wav", 0.2)
+                    #player_attacked(time.time())
                     reset_position()
                     topchrono = time.time()
                     if score % 5 == 0:
@@ -249,8 +251,10 @@ def event_manager():
                             delai = round(delai - 0.1, 3)
                         elif delai >= 0.5:
                             delai = round(delai - 0.05, 3)
-                        else:
+                        elif delai >= 0.1:
                             delai = round(delai - 0.025, 3)
+                        else:
+                            delai = round(delai - 0.005, 3)
                 else:
                     if gamemode["survie"]:
                         vies -= 1
@@ -306,8 +310,10 @@ while True:
                             delai = round(delai + 0.1, 3)
                         elif delai >= 0.5:
                             delai = round(delai + 0.05, 3)
-                        elif delai < 0.5:
+                        elif delai > 0.1:
                             delai = round(delai + 0.025, 3)
+                        else:
+                            delai = round(delai + 0.005, 3)
                 reset_position()
             # Chronomètre
             if time.time() - chronometre > 1:
@@ -361,7 +367,7 @@ while True:
             place_text(WIDTH / 2, 400-87.5-60, f"Temps Initial : {chrono-1} secondes", 36)
         else:
             place_text(WIDTH / 2, 400 - 87.5 - 60, f"Temps : {secondes} secondes", 36)
-            place_text(WIDTH / 2, 400 - 87.5, f"Highscore : {cible_touchee} cibles", 36)
+            place_text(WIDTH / 2, 400 - 87.5, f"Highscore : {high_score} cibles", 36)
         if menu_button.draw():
             restart()
             gs_main_menu.enable()
